@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}Relatório Mensal - Controle de Caixa{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-bar-chart me-2"></i>Relatório Mensal</h1>
+</div>
+
+<div class="filter-bar mb-4">
+    <form method="GET" class="row g-2 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label small text-muted">Mês</label>
+            <select name="mes" class="form-select form-select-sm">
+                {% for num, nome in meses %}
+                <option value="{{ num }}" {% if mes == num %}selected{% endif %}>{{ nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label small text-muted">Ano</label>
+            <input type="number" name="ano" class="form-control form-control-sm" value="{{ ano }}" min="2020" max="2030">
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary btn-sm">
+                <i class="bi bi-search me-1"></i>Consultar
+            </button>
+        </div>
+    </form>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+        <div class="card card-stat">
+            <div class="card-body text-center">
+                <p class="stat-label">Total Entradas</p>
+                <p class="stat-value text-success">R$ {{ '%.2f'|format(resumo.total_entradas)|replace('.', ',') }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card card-stat">
+            <div class="card-body text-center">
+                <p class="stat-label">Total Saídas</p>
+                <p class="stat-value text-danger">R$ {{ '%.2f'|format(resumo.total_saidas)|replace('.', ',') }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card card-stat">
+            <div class="card-body text-center">
+                <p class="stat-label">Saldo</p>
+                <p class="stat-value {% if resumo.saldo >= 0 %}text-success{% else %}text-danger{% endif %}">
+                    R$ {{ '%.2f'|format(resumo.saldo)|replace('.', ',') }}
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card card-stat">
+            <div class="card-body text-center">
+                <p class="stat-label">Lançamentos</p>
+                <p class="stat-value">{{ resumo.total_lancamentos }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-3">
+                <h5 class="card-title mb-0">Entradas vs Saídas por Dia</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="graficoMensal" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-3">
+                <h5 class="card-title mb-0">Por Forma de Pagamento</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for p in pagamentos %}
+                    <div class="list-group-item d-flex justify-content-between">
+                        <span>{{ p.forma }} <small class="text-muted">({{ p.quantidade }}x)</small></span>
+                        <strong>R$ {{ '%.2f'|format(p.total)|replace('.', ',') }}</strong>
+                    </div>
+                    {% else %}
+                    <div class="list-group-item text-center text-muted py-3">Sem dados</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-3">
+                <h5 class="card-title mb-0 text-success">Entradas por Categoria</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for c in categorias.entradas %}
+                    <div class="list-group-item d-flex justify-content-between">
+                        <span>
+                            <span class="d-inline-block rounded-circle me-2" style="width:12px;height:12px;background:{{ c.cor }}"></span>
+                            {{ c.nome }}
+                        </span>
+                        <strong class="text-success">R$ {{ '%.2f'|format(c.total)|replace('.', ',') }}</strong>
+                    </div>
+                    {% else %}
+                    <div class="list-group-item text-center text-muted py-3">Sem entradas</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-3">
+                <h5 class="card-title mb-0 text-danger">Saídas por Categoria</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for c in categorias.saidas %}
+                    <div class="list-group-item d-flex justify-content-between">
+                        <span>
+                            <span class="d-inline-block rounded-circle me-2" style="width:12px;height:12px;background:{{ c.cor }}"></span>
+                            {{ c.nome }}
+                        </span>
+                        <strong class="text-danger">R$ {{ '%.2f'|format(c.total)|replace('.', ',') }}</strong>
+                    </div>
+                    {% else %}
+                    <div class="list-group-item text-center text-muted py-3">Sem saídas</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const dados = {{ grafico|tojson }};
+if (dados.labels.length > 0) {
+    new Chart(document.getElementById('graficoMensal').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: dados.labels.map(d => d.split('-')[2] + '/' + d.split('-')[1]),
+            datasets: [
+                { label: 'Entradas', data: dados.entradas, backgroundColor: 'rgba(40,167,69,0.7)', borderRadius: 4 },
+                { label: 'Saídas', data: dados.saidas, backgroundColor: 'rgba(220,53,69,0.7)', borderRadius: 4 }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { callback: v => 'R$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits: 2}) }
+                }
+            }
+        }
+    });
+}
+</script>
+{% endblock %}

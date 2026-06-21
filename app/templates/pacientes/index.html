@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Pacientes - Controle de Caixa{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-people me-2"></i>Pacientes</h1>
+    <a href="{{ url_for('pacientes.criar') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>Novo Paciente
+    </a>
+</div>
+
+<div class="filter-bar">
+    <form method="GET" class="row g-2 align-items-end">
+        <div class="col-md-8">
+            <input type="text" name="busca" class="form-control" placeholder="Buscar por nome ou CPF..."
+                   value="{{ busca }}">
+        </div>
+        <div class="col-md-4 d-flex gap-2">
+            <button type="submit" class="btn btn-primary flex-grow-1">
+                <i class="bi bi-search me-1"></i>Buscar
+            </button>
+            {% if busca %}
+            <a href="{{ url_for('pacientes.index') }}" class="btn btn-outline-secondary">Limpar</a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>CPF</th>
+                        <th>Telefone</th>
+                        <th>Email</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in pacientes.items %}
+                    <tr>
+                        <td class="fw-medium">
+                            <a href="{{ url_for('pacientes.detalhe', id=p.id) }}" class="text-decoration-none">
+                                {{ p.nome }}
+                            </a>
+                        </td>
+                        <td>{{ p.cpf }}</td>
+                        <td>{{ p.telefone or '—' }}</td>
+                        <td>{{ p.email or '—' }}</td>
+                        <td class="text-end">
+                            <a href="{{ url_for('pacientes.detalhe', id=p.id) }}" class="btn btn-sm btn-outline-info">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{{ url_for('pacientes.editar', id=p.id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form action="{{ url_for('pacientes.excluir', id=p.id) }}" method="POST" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm btn-outline-danger btn-excluir">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">
+                            {% if busca %}Nenhum paciente encontrado para "{{ busca }}"{% else %}Nenhum paciente cadastrado{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% if pacientes.pages > 1 %}
+<nav class="mt-3">
+    <ul class="pagination justify-content-center">
+        <li class="page-item {% if not pacientes.has_prev %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('pacientes.index', page=pacientes.prev_num, busca=busca) }}">Anterior</a>
+        </li>
+        {% for p in pacientes.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if p %}
+                <li class="page-item {% if p == pacientes.page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('pacientes.index', page=p, busca=busca) }}">{{ p }}</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">…</span></li>
+            {% endif %}
+        {% endfor %}
+        <li class="page-item {% if not pacientes.has_next %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('pacientes.index', page=pacientes.next_num, busca=busca) }}">Próximo</a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}
